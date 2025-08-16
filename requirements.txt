@@ -5,3 +5,4 @@ pytesseract
 pdf2image
 openai-agents[viz]
 python-dotenv
+fastapi
