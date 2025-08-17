@@ -56,7 +56,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://*.vercel.app",
+        "https://legalyze-ai.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -232,6 +236,11 @@ async def run_pipeline_streamed(user_text: str) -> AsyncGenerator[str, None]:
         yield create_status_message("System Error", "failed", error_message)
 
     yield "data: [DONE]\n\n"
+
+
+@app.get("/")
+async def root():
+    return {"message": "Legalyze API is running!", "status": "healthy"}
 
 
 @app.post("/analyze/")
