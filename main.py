@@ -15,7 +15,6 @@ from agents import (
     RunConfig,
     InputGuardrailTripwireTriggered,
     OutputGuardrailTripwireTriggered,
-    ModelSettings,
 )
 from pydantic_models import (
     FinalOutput,
@@ -55,7 +54,6 @@ from converter import (
 
 app = FastAPI()
 
-# Add CORS middleware to allow requests from your Next.js frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -64,7 +62,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Your existing functions (load_text_from_path, etc.) remain the same
 SUPPORTED_TEXT_EXTS = {".txt"}
 SUPPORTED_DOC_EXTS = {".docx"}
 SUPPORTED_PDF_EXTS = {".pdf"}
@@ -103,8 +100,6 @@ def load_text_from_path(path: str) -> Optional[str]:
     return None
 
 
-# We need to create a dummy analysis_agent and main_agent if they are not defined.
-# In your actual code, these will be your real agent definitions.
 analysis_agent = Agent(
     name="LegalAnalysisAgent",
     instructions=analysis_agent_instruction,
@@ -132,7 +127,6 @@ main_agent = Agent(
     name="MainLegalAgent",
     instructions=main_agent_instruction,
     model=model,
-    model_settings=ModelSettings(temperature=0.1),
     input_guardrails=[sensitive_input_guardrail],
     tools=[
         document_detector_agent.as_tool(
@@ -145,10 +139,6 @@ main_agent = Agent(
 
 
 async def run_pipeline_streamed(user_text: str) -> AsyncGenerator[str, None]:
-    """
-    A modified pipeline that yields status updates as JSON strings
-    for Server-Sent Events.
-    """
     config = RunConfig(tracing_disabled=True, model=model, model_provider=client)
 
     def create_status_message(step: str, status: str, message: str) -> str:
@@ -159,7 +149,7 @@ async def run_pipeline_streamed(user_text: str) -> AsyncGenerator[str, None]:
     try:
         yield create_status_message(
             "Input Received",
-            "processing",
+            "completed",
             f"Received {len(user_text)} characters for analysis.",
         )
         await asyncio.sleep(1)
@@ -224,7 +214,6 @@ async def run_pipeline_streamed(user_text: str) -> AsyncGenerator[str, None]:
                 "Determination Failed", "failed", "Could not determine document type."
             )
 
-        # Yield the final message in a different format
         final_payload = json.dumps({"final_message": final_response_message})
         yield f"data: {final_payload}\n\n"
 
@@ -242,25 +231,18 @@ async def run_pipeline_streamed(user_text: str) -> AsyncGenerator[str, None]:
         error_message = f"An unexpected error occurred: {str(e)}"
         yield create_status_message("System Error", "failed", error_message)
 
-    # Signal the end of the stream
     yield "data: [DONE]\n\n"
 
 
 @app.post("/analyze/")
 async def analyze_document(file: UploadFile = File(...)):
-    """
-    This endpoint accepts a file, saves it temporarily, extracts text,
-    and then streams the analysis progress back to the client.
-    """
     try:
-        # Save the uploaded file to a temporary file
         with tempfile.NamedTemporaryFile(
             delete=False, suffix=os.path.splitext(file.filename)[1]
         ) as tmp:
             tmp.write(await file.read())
             tmp_path = tmp.name
 
-        # Extract text from the saved file
         user_text = load_text_from_path(tmp_path)
 
         if not user_text:
@@ -270,7 +252,6 @@ async def analyze_document(file: UploadFile = File(...)):
             )
 
     finally:
-        # Clean up the temporary file
         if "tmp_path" in locals() and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
