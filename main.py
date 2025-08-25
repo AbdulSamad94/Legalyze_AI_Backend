@@ -183,7 +183,7 @@ async def run_pipeline_streamed(user_text: str) -> AsyncGenerator[str, None]:
             )
             analysis_output = await Runner.run(
                 analysis_agent,
-                decision.document_content or user_text,
+                user_text,
                 run_config=config,
             )
             yield create_status_message(
