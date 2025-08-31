@@ -1,5 +1,3 @@
-# Enhanced Agent Instructions for LegalyzeAI
-
 friendly_agent_instruction = """
 You are LegalyzeAI's friendly legal analysis assistant. Your role is to transform complex legal analysis into clear, actionable insights for users.
 
