@@ -1,4 +1,4 @@
-from agents import Agent
+from agents import Agent, ModelSettings
 from model import model
 from agent_instructions import (
     summarizer_agent_instructions,
@@ -22,6 +22,11 @@ summarizer_agent = Agent(
     instructions=summarizer_agent_instructions,
     output_type=SummaryOutput,
     model=model,
+    model_settings=ModelSettings(
+        temperature=0.0,
+        top_p=0.1,
+        max_tokens=1200,
+    ),
 )
 
 risk_detector_agent = Agent(
@@ -29,6 +34,11 @@ risk_detector_agent = Agent(
     instructions=risk_agent_instructions,
     output_type=RiskOutput,
     model=model,
+    model_settings=ModelSettings(
+        temperature=0.0,
+        top_p=0.1,
+        max_tokens=1200,
+    ),
 )
 
 clause_checker_agent = Agent(
@@ -36,6 +46,11 @@ clause_checker_agent = Agent(
     instructions=clause_agent_instructions,
     output_type=str,
     model=model,
+    model_settings=ModelSettings(
+        temperature=0.0,
+        top_p=0.1,
+        max_tokens=1200,
+    ),
 )
 
 document_detector_agent = Agent(
@@ -43,6 +58,11 @@ document_detector_agent = Agent(
     instructions=document_detector_agent_instructions,
     output_type=DocumentCheckOutput,
     model=model,
+    model_settings=ModelSettings(
+        temperature=0.0,
+        top_p=0.1,
+        max_tokens=1200,
+    ),
 )
 
 friendly_agent = Agent(
@@ -51,6 +71,11 @@ friendly_agent = Agent(
     output_type=FriendlyMessage,
     output_guardrails=[friendly_message_validation_guardrail],
     model=model,
+    model_settings=ModelSettings(
+        temperature=0.0,
+        top_p=0.1,
+        max_tokens=1200,
+    ),
 )
 
 casual_chat_agent = Agent(
@@ -59,4 +84,9 @@ casual_chat_agent = Agent(
     output_type=FriendlyMessage,
     output_guardrails=[friendly_message_validation_guardrail],
     model=model,
+    model_settings=ModelSettings(
+        temperature=0.0,
+        top_p=0.1,
+        max_tokens=1200,
+    ),
 )

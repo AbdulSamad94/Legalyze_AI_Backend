@@ -1,4 +1,4 @@
-from agents import Agent
+from agents import Agent, ModelSettings
 from pydantic_models import FinalOutput, AgentDecision
 from agent_instructions import (
     analysis_agent_instruction,
@@ -10,8 +10,6 @@ from agents_definitions import (
     risk_detector_agent,
     clause_checker_agent,
     document_detector_agent,
-    friendly_agent,
-    casual_chat_agent,
 )
 from agent_instructions import (
     summarizer_agent_instructions,
@@ -48,6 +46,11 @@ def create_analysis_agent() -> Agent:
                 tool_description=clause_agent_instructions,
             ),
         ],
+        model_settings=ModelSettings(
+            temperature=0.0,
+            top_p=0.1,
+            max_tokens=1200,
+        ),
     )
 
 
@@ -65,6 +68,11 @@ def create_main_agent() -> Agent:
             )
         ],
         output_type=AgentDecision,
+        model_settings=ModelSettings(
+            temperature=0.0,
+            top_p=0.1,
+            max_tokens=1200,
+        ),
     )
 
 
