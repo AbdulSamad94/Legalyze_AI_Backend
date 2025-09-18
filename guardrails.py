@@ -10,7 +10,6 @@ from agents import (
 from Logger import SimpleLogger
 from pydantic_models import (
     FinalOutput,
-    FriendlyMessage,
     SharedContext,
     SensitiveCheckOutput,
 )
@@ -88,45 +87,6 @@ async def final_output_validation_guardrail(
             "risks_valid": has_risks,
             "verdict_valid": has_verdict,
             "disclaimer_valid": has_disclaimer,
-        },
-        tripwire_triggered=not is_valid,
-    )
-
-
-@output_guardrail
-async def friendly_message_validation_guardrail(
-    ctx: RunContextWrapper[SharedContext],
-    agent: Agent,
-    output: FriendlyMessage,
-) -> GuardrailFunctionOutput:
-    SimpleLogger.log(
-        "🛡️ FRIENDLY_OUTPUT_GUARDRAIL", "Validating friendly message output..."
-    )
-
-    has_message = bool(output.message and len(output.message.strip()) > 5)
-    is_not_too_long = len(output.message) < 2000
-
-    contains_inappropriate = any(
-        word in output.message.lower()
-        for word in ["i cannot", "i can't", "sorry, i cannot", "i'm unable to"]
-    )
-
-    is_valid = has_message and is_not_too_long and not contains_inappropriate
-
-    SimpleLogger.log(
-        "🛡️ FRIENDLY_OUTPUT_GUARDRAIL",
-        f"Has message: {'✓' if has_message else '✗'} | "
-        f"Length OK: {'✓' if is_not_too_long else '✗'} | "
-        f"Appropriate: {'✓' if not contains_inappropriate else '✗'} | "
-        f"Result: {'VALID' if is_valid else 'INVALID'}",
-    )
-
-    return GuardrailFunctionOutput(
-        output_info={
-            "validation_passed": is_valid,
-            "has_message": has_message,
-            "length_ok": is_not_too_long,
-            "appropriate_content": not contains_inappropriate,
         },
         tripwire_triggered=not is_valid,
     )

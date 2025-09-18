@@ -56,9 +56,7 @@ class FinalOutput(BaseModel):
     processed_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 
-class FriendlyMessage(BaseModel):
-    message: str
-    tone: str = "friendly"
+# The FriendlyMessage class has been removed as it is no longer in use.
 
 
 class DocumentCheckOutput(BaseModel):
@@ -78,7 +76,7 @@ class AnalysisResult(BaseModel):
     type: str
     document_info: Dict[str, str] = Field(default_factory=dict)
     analysis: FinalOutput | None = None
-    friendly_message: str | None = None
+    friendly_message: str | None = None  # This is kept for frontend compatibility
     session_id: str
     processed_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 

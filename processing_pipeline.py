@@ -11,7 +11,6 @@ from agents import (
 )
 from pydantic_models import SharedContext, AgentDecision
 from model import model, client
-from agents_definitions import casual_chat_agent, friendly_agent
 from agents_setup import analysis_agent, main_agent
 from Logger import SimpleLogger
 
@@ -186,21 +185,6 @@ async def run_demo_pipeline(
                 "completed",
                 "Your analysis report is ready!",
             )
-
-        elif decision.action == "casual_chat":
-            yield create_status_message(
-                "Response Generation", "processing", "Generating response..."
-            )
-
-            casual_output = await Runner.run(
-                casual_chat_agent, user_text, run_config=config
-            )
-            final_message = casual_output.final_output.message
-
-            yield create_status_message(
-                "Response Generation", "completed", "Response ready!"
-            )
-
         else:
             final_message = """I couldn't identify this as a legal document. 
 
@@ -411,46 +395,11 @@ async def run_enhanced_pipeline_streamed(
                 normalized_risks.append(norm)
 
             analysis_dict["risks"] = normalized_risks
-            friendly_message = ""
-            try:
-                friendly_input = json.dumps(analysis_dict)
 
-                SimpleLogger.log(
-                    "DEBUG",
-                    f"Passing to friendly agent: {friendly_input[:500]}...",
-                )
-
-                friendly_output = await Runner.run(
-                    friendly_agent,
-                    friendly_input,
-                    run_config=config,
-                )
-
-                friendly_final = (
-                    friendly_output.final_output
-                    if hasattr(friendly_output, "final_output")
-                    else friendly_output
-                )
-
-                if hasattr(friendly_final, "message"):
-                    friendly_message = str(getattr(friendly_final, "message", ""))
-                elif isinstance(friendly_final, dict):
-                    friendly_message = str(
-                        friendly_final.get("message", "")
-                        or friendly_final.get("text", "")
-                    )
-                else:
-                    friendly_message = str(friendly_final)
-
-            except Exception as e:
-                SimpleLogger.log("FRIENDLY_AGENT_FAIL", f"Error: {str(e)}")
-
-            if not friendly_message or len(friendly_message.strip()) < 20:
-                summary = analysis_dict.get("summary", "")
-                if summary:
-                    friendly_message = f"Analysis complete. {summary[:200]}..."
-                else:
-                    friendly_message = "Your document analysis is complete. Please review the detailed report below for key findings and recommendations."
+            # Create a simple friendly message to maintain frontend compatibility
+            friendly_message = f"Your analysis for '{filename}' is complete. Here is a summary of our findings, key risks identified, and our final verdict."
+            if summary := analysis_dict.get("summary"):
+                friendly_message = f"Analysis complete. {summary[:250]}..."
 
             final_result = {
                 "type": "legal_analysis",
@@ -489,42 +438,21 @@ async def run_enhanced_pipeline_streamed(
 
             yield f"data: {json.dumps({'final_result': final_result}, default=str)}\n\n"
 
-        elif decision.action == "casual_chat":
-            yield create_status_message(
-                "Processing Query", "processing", "Understanding your question...", 70
-            )
-
-            casual_output = await Runner.run(
-                casual_chat_agent, user_text, run_config=config
-            )
-
-            final_result = {
-                "type": "casual_response",
-                "message": casual_output.final_output.message,
-                "session_id": session_id,
-            }
-
-            yield create_status_message(
-                "Response Ready",
-                "completed",
-                "Generated response to your question",
-                100,
-            )
-
-            yield f"data: {json.dumps({'final_result': final_result})}\n\n"
-
-        else:
+        else:  # This handles 'no_document_found'
             final_result = {
                 "type": "error",
-                "message": "I couldn't determine if that was a legal document. Please provide a clear legal document or ask a general question.",
+                "message": "This does not appear to be a legal document suitable for analysis. Please upload a clear contract, agreement, or policy. Alternatively, you can ask a general legal question.",
                 "session_id": session_id,
             }
+            yield create_status_message(
+                "Analysis Halted", "completed", "Unsupported document type", 100
+            )
             yield f"data: {json.dumps({'final_result': final_result})}\n\n"
 
     except InputGuardrailTripwireTriggered as e:
         error_result = {
             "type": "error",
-            "message": "Your document contains sensitive information that cannot be processed.",
+            "message": "Your document contains sensitive information that cannot be processed for security and privacy reasons.",
             "details": str(e.guardrail_result.output.output_info),
             "session_id": session_id,
         }

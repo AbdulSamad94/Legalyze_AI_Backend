@@ -5,16 +5,12 @@ from agent_instructions import (
     risk_agent_instructions,
     clause_agent_instructions,
     document_detector_agent_instructions,
-    friendly_agent_instruction,
-    casual_chat_agent_instruction,
 )
 from pydantic_models import (
     RiskOutput,
     SummaryOutput,
     DocumentCheckOutput,
-    FriendlyMessage,
 )
-from guardrails import friendly_message_validation_guardrail
 
 
 summarizer_agent = Agent(
@@ -57,32 +53,6 @@ document_detector_agent = Agent(
     name="DocumentDetector",
     instructions=document_detector_agent_instructions,
     output_type=DocumentCheckOutput,
-    model=model,
-    model_settings=ModelSettings(
-        temperature=0.0,
-        top_p=0.1,
-        max_tokens=1200,
-    ),
-)
-
-friendly_agent = Agent(
-    name="FriendlyResponseAgent",
-    instructions=friendly_agent_instruction,
-    output_type=FriendlyMessage,
-    output_guardrails=[friendly_message_validation_guardrail],
-    model=model,
-    model_settings=ModelSettings(
-        temperature=0.0,
-        top_p=0.1,
-        max_tokens=1200,
-    ),
-)
-
-casual_chat_agent = Agent(
-    name="CasualChatAgent",
-    instructions=casual_chat_agent_instruction,
-    output_type=FriendlyMessage,
-    output_guardrails=[friendly_message_validation_guardrail],
     model=model,
     model_settings=ModelSettings(
         temperature=0.0,
